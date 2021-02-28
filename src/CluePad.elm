@@ -1,7 +1,7 @@
 module CluePad exposing (..)
 
 import Browser
-import Html exposing (Attribute, Html, button, div, form, input, label, text, br, h4, h5, hr)
+import Html exposing (Attribute, Html, button, div, form, input, label, text, br, h4, h5)
 import Html.Attributes exposing (type_, class, id, for, value)
 import Html.Events exposing (keyCode, on, onBlur, onClick, onFocus, onInput)
 
@@ -124,31 +124,18 @@ type alias Item =
 type alias Model =
   { items: List Item
   , selectedItemGameObjectId: GameObjectId
+  , selectedItemCategory: ItemCategory
   }
 
-isSuspect : Item -> Basics.Bool
-isSuspect item =
-  item.category == Character
+isItemInCategory : ItemCategory -> Item -> Bool
+isItemInCategory itemCategory item =
+  item.category == itemCategory
 
-isWeapon : Item -> Basics.Bool
-isWeapon item =
-  item.category == Weapon
+getItemsForCategory : ItemCategory -> List Item -> List Item
+getItemsForCategory itemCategory items = 
+  List.filter (isItemInCategory itemCategory) items
 
-isRoom : Item -> Basics.Bool
-isRoom item =
-  item.category == Room
 
-getSuspects : List Item -> List Item
-getSuspects items =
-  List.filter isSuspect items
-
-getWeapons : List Item -> List Item
-getWeapons items =
-  List.filter isWeapon items
-
-getRooms : List Item -> List Item
-getRooms items =
-  List.filter isRoom items
 
 
 init : () -> (Model, Cmd Msg)
@@ -176,6 +163,7 @@ init _ =
     , Item Weapon Wrench "Wrench" ""
     ]
     None
+    Character
   , Cmd.none
   )
 
@@ -187,6 +175,7 @@ type Msg
   | UpdateItemNote String
   | SaveAllNotes
   | ClearAllNotes
+  | SwitchTab ItemCategory
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -209,6 +198,11 @@ update msg model =
 
     ClearAllNotes ->
       ( { model | items = clearNotes model.items }
+      , Cmd.none
+      )
+
+    SwitchTab itemCategory ->
+      ( { model | selectedItemCategory = itemCategory }
       , Cmd.none
       )
 
@@ -242,34 +236,34 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
   div [ class "container" ]
-    [ form [ class "pt-4" ]
-      [ h4 [] [ text "CluePad" ]
-      , hr [] []
-      ]
-    , h5[] [ text "Suspects" ]
-    , viewItems (getSuspects model.items)
-    , hr [] []
-    , h5[] [ text "Weapons" ]
-    , viewItems (getWeapons model.items)
-    , hr [] []
-    , h5[] [ text "Rooms" ]
-    , viewItems (getRooms model.items)
-    , br [] []
-    , div [ class "form-group" ]
-        [ viewButton "btn btn-primary mb-4" ClearAllNotes "Clear All Notes"
-        ]
-    ]
+    [ div [ class "top-decoration" ] []
+    , div [ class "main-content" ]
+      [ form []
+        [ h4 [] [ text "CluePad \u{1F575}\u{FE0F}\u{200D}\u{2640}\u{FE0F}" ]
 
-viewItem : Item -> Html Msg
-viewItem item =
-  div [ class "form-group row" ] 
-    [ label [ for (getNoteHtmlInputId item), class "col-4 col-sm-3 col-lg-2 col-form-label" ] [ text item.name ] 
-    , div [ class "col-8 col-sm-9 col-lg-10" ] [ input [ id (getNoteHtmlInputId item), type_ "text", class "form-control", value item.note, onInput UpdateItemNote, onFocus (ItemNoteSelected item.gameObjectId) ] [] ]
+        , div [ class "btn-group mb-3" ]
+          [ viewButton "btn btn-sm btn-secondary mr-1" (SwitchTab Character) "\u{1F937}\u{200D}\u{2640}\u{FE0F} Suspects"
+          , viewButton "btn btn-sm btn-secondary mr-1" (SwitchTab Weapon) "\u{1F5E1}\u{FE0F} Weapons"
+          , viewButton "btn btn-sm btn-secondary" (SwitchTab Room) "\u{1F6AA} Rooms"
+          ]
+        , viewItemCategory model.selectedItemCategory model.items
+        , div [ class "form-group" ]
+          [ viewButton "btn btn-danger mb-4" ClearAllNotes "\u{1F5D1}\u{FE0F} Clear All Notes"
+          ]
+        ]
+      ]
     ]
 
 getNoteHtmlInputId : Item -> String
 getNoteHtmlInputId item =
   (String.toLower (gameObjectIdToString item.gameObjectId)) ++ "note"
+
+viewItem : Item -> Html Msg
+viewItem item =
+  div [ class "form-group row" ] 
+    [ label [ for (getNoteHtmlInputId item), class "col-5 col-sm-3 col-lg-2 col-form-label" ] [ text item.name ] 
+    , div [ class "col-7 col-sm-9 col-lg-10" ] [ input [ id (getNoteHtmlInputId item), type_ "text", class "form-control bg-transparent", value item.note, onInput UpdateItemNote, onFocus (ItemNoteSelected item.gameObjectId) ] [] ]
+    ]
 
 viewItems : List Item -> Html Msg
 viewItems items =
@@ -279,3 +273,6 @@ viewButton : String -> Msg -> String -> Html Msg
 viewButton cls toMsg txt = 
   button [ type_ "button", class cls, onClick toMsg ] [ text txt ]
 
+viewItemCategory : ItemCategory -> List Item -> Html Msg
+viewItemCategory itemCategory items =
+  viewItems (getItemsForCategory itemCategory items)

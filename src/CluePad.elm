@@ -1,5 +1,5 @@
 -- Ports can only be used in a port module
-port module CluePad exposing (..)
+port module Cluepad exposing (..)
 
 import Browser
 import Html exposing (Attribute, Html, button, div, form, input, label, text, br, h4, h5)
@@ -271,7 +271,7 @@ view model =
     [ div [ class "top-decoration" ] []
     , div [ class "main-content" ]
       [ form []
-        [ h4 [] [ text "CluePad \u{1F575}\u{FE0F}\u{200D}\u{2640}\u{FE0F}" ]
+        [ h4 [] [ text "Cluepad \u{1F575}\u{FE0F}\u{200D}\u{2640}\u{FE0F}" ]
 
         , div [ class "btn-group mb-3" ]
           [ viewButton "btn btn-sm btn-secondary mr-1" (SwitchTab Character) "\u{1F937}\u{200D}\u{2640}\u{FE0F} Suspects"

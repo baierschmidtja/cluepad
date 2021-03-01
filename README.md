@@ -1,8 +1,8 @@
-# CluePad
+# Cluepad
 Basic online notepad for the classic whodunnit game.  Save paper and use your favorite device to keep track of your progress.
 
 ## build (requires elm)
-`elm make src/CluePad.elm --optimize --output=www/cluepad.js`
+`elm make src/Cluepad.elm --optimize --output=www/cluepad.js`
 
 ## run locally
 `elm reactor`  

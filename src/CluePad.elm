@@ -295,8 +295,8 @@ getNoteHtmlInputId item =
 viewItem : Item -> Html Msg
 viewItem item =
   div [ class "form-group row" ] 
-    [ label [ for (getNoteHtmlInputId item), class "col-5 col-sm-3 col-lg-2 col-form-label" ] [ text item.name ] 
-    , div [ class "col-7 col-sm-9 col-lg-10" ] [ input [ id (getNoteHtmlInputId item), type_ "text", class "form-control bg-transparent", value item.note, onInput UpdateItemNote, onFocus (ItemNoteSelected item.gameObjectId) ] [] ]
+    [ label [ for (getNoteHtmlInputId item), class "col-5 col-sm-3 col-lg-2 col-form-label col-form-label-lg handwriting" ] [ text item.name ] 
+    , div [ class "col-7 col-sm-9 col-lg-10" ] [ input [ id (getNoteHtmlInputId item), type_ "text", class "form-control form-control-lg bg-transparent handwriting", value item.note, onInput UpdateItemNote, onFocus (ItemNoteSelected item.gameObjectId) ] [] ]
     ]
 
 viewItems : List Item -> Html Msg

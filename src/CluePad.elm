@@ -189,9 +189,12 @@ init flags =
       None
       Character
   in
-    ( case JsonD.decodeValue serializableNotesDecoder flags of
-         Ok serializableNotes -> { model | items = mapSerializableNotesToItems serializableNotes model.items }
-         Err _ -> model
+    ( case JsonD.decodeValue serializableStateDecoder flags of
+        Ok serializableState ->
+          { model | items = mapSerializableNotesToItems serializableState.serializableNotes model.items
+          , selectedItemCategory =  serializableState.selectedItemCategory
+          }
+        Err _ -> model
     , Cmd.none
     )
 
@@ -331,18 +334,22 @@ updateWithStorage msg oldModel =
     ( newModel, cmds ) = update msg oldModel
   in
   ( newModel
-  , Cmd.batch [ setLocalStorage (encodeSerializableNotes (itemsToSerializableNotes newModel.items)), cmds ]
+  , Cmd.batch [ setLocalStorage (encodeSerializableState (modelToSerializableState newModel)), cmds ]
   )
 
 
 
 -- PERSISTENCE
 
-
 type alias SerializableNote =
   { gameObjectId: GameObjectId
   , note: String
   }
+
+type alias SerializableState =
+ { serializableNotes: List SerializableNote
+ , selectedItemCategory: ItemCategory
+ }
 
 
 itemToSerializableNote : Item -> SerializableNote
@@ -377,9 +384,29 @@ mapSerializableNotesToItems : List SerializableNote -> List Item -> List Item
 mapSerializableNotesToItems serializableNotes items  =
   List.map (mapSerializableNoteToItem serializableNotes) items
 
-
+modelToSerializableState : Model -> SerializableState
+modelToSerializableState model =
+  SerializableState (itemsToSerializableNotes model.items) model.selectedItemCategory
 
 -- JSON DECODERS
+
+
+itemCategoryDecoder : JsonD.Decoder ItemCategory
+itemCategoryDecoder =
+  JsonD.string |> JsonD.andThen (\itemCategoryStr ->
+    case itemCategoryStr of  
+      "Character" ->
+        JsonD.succeed Character
+      
+      "Weapon" ->
+        JsonD.succeed Weapon
+
+      "Room" ->
+        JsonD.succeed Room
+
+      _ ->
+        JsonD.fail "invalid ItemCategory"
+  )
 
 
 gameObjectIdDecoder : JsonD.Decoder GameObjectId
@@ -469,6 +496,14 @@ serializableNotesDecoder : JsonD.Decoder (List SerializableNote)
 serializableNotesDecoder =
   JsonD.list serializableNoteDecoder
 
+serializableStateDecoder : JsonD.Decoder SerializableState
+serializableStateDecoder =
+  JsonD.map2 SerializableState
+    (JsonD.field "serializableNotes" serializableNotesDecoder)
+    (JsonD.field "selectedItemCategory" itemCategoryDecoder)
+
+  
+
 -- JSON ENCODE
 
 encodeSerializableNote : SerializableNote -> JsonE.Value
@@ -482,3 +517,10 @@ encodeSerializableNote serializableNote =
 encodeSerializableNotes : List SerializableNote -> JsonE.Value
 encodeSerializableNotes serializableNotes =
   JsonE.list encodeSerializableNote serializableNotes
+
+encodeSerializableState : SerializableState -> JsonE.Value
+encodeSerializableState serializableState =
+  JsonE.object
+    [ ("serializableNotes", encodeSerializableNotes serializableState.serializableNotes)
+    , ("selectedItemCategory", JsonE.string (itemCategoryToString serializableState.selectedItemCategory))
+    ]

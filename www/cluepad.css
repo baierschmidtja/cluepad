@@ -20,6 +20,8 @@ body {
 
 .handwriting {
     font-family: 'Reenie Beanie', cursive;
+    font-weight: bold;
+    font-size: x-large;
 }
 
 .main-content {

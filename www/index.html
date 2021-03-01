@@ -33,11 +33,23 @@
   <!-- Elm  -->
 	<div id="elm-div"></div>
 	<script src="cluepad.js"></script>
-    <script>
-      var app = Elm.CluePad.init({
-        node: document.getElementById("elm-div")
-      });
-	</script>
-	
+  <script type="text/javascript">
+    // Extract the stored data from previous sessions.
+    var storedData = localStorage.getItem('baierschmidtja-cluepad');
+    var flags = storedData ? JSON.parse(storedData) : null;
+    
+    // Load the Elm app, passing in the stored data.
+    var app = Elm.CluePad.init({
+      node: document.getElementById('elm-div'),
+      flags: flags
+    });
+    
+    // Listen for commands from the `setLocalStorage` port.
+    // Turn the data to a string and put it in localStorage.
+    app.ports.setLocalStorage.subscribe(function(state) {
+      localStorage.setItem('baierschmidtja-cluepad', JSON.stringify(state));
+    });
+  </script>
+
   </body>
 </html>

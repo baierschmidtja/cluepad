@@ -334,8 +334,8 @@ viewItem i item =
 
   in       
     div [ class outerDivClass ] 
-      [ label [ for getHtmlId, class "col-5 col-sm-3 col-lg-2 col-form-label handwriting" ] [ text item.name ] 
-      , div [ class "col-7 col-sm-9 col-lg-10" ] [ input [ id getHtmlId, type_ "text", class "form-control bg-transparent handwriting", value item.note, onInput UpdateItemNote, onFocus (ItemNoteSelected item.gameObjectId) ] [] ]
+      [ label [ for getHtmlId, class "col-6 col-sm-3 col-lg-2 col-form-label handwriting" ] [ text item.name ] 
+      , div [ class "col-6 col-sm-9 col-lg-10" ] [ input [ id getHtmlId, type_ "text", class "form-control bg-transparent handwriting", value item.note, onInput UpdateItemNote, onFocus (ItemNoteSelected item.gameObjectId) ] [] ]
       ]
 
 

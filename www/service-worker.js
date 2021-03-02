@@ -13,9 +13,12 @@ self.addEventListener('install', async (event) => {
       .then((cache) => cache.addAll(
         [
           'https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css',
+          '/fonts/ReenieBeanie.woff2',
+          '/images/texture-seamless-wood-4.jpg',
+          '/images/yellow-notepad-long.jpg',
+          '/images/yellow-notepad-wire.jpg',
           '/cluepad.css',
           '/cluepad.js',
-          'https://cluepad.baierschmidtja.com',
           '/index.html'
         ]
       )

@@ -7,6 +7,7 @@ import Html.Attributes exposing (type_, class, id, for, value)
 import Html.Events exposing (keyCode, on, onBlur, onClick, onFocus, onInput)
 import Json.Encode as JsonE
 import Json.Decode as JsonD
+import String
 
 
 -- MAIN
@@ -270,41 +271,55 @@ clearNotes items =
 
 view : Model -> Html Msg
 view model =
-  div [ class "container" ]
-    [ div [ class "top-decoration" ] []
-    , div [ class "main-content" ]
-      [ form []
-        [ h4 [] [ text "Cluepad \u{1F575}\u{FE0F}\u{200D}\u{2640}\u{FE0F}" ]
+  let
+    -- for padding out the pages with less items to keep the notepad size consistent
+    invisibleItemCount = 
+      case model.selectedItemCategory of
+         Character -> 3
+         Weapon -> 3
+         Room -> 0
+  in
+    div [ class "container" ]
+      [ div [ class "top-decoration" ] []
+      , div [ class "main-content" ]
+        [ form []
+          [ h4 [] [ text "Cluepad \u{1F575}\u{FE0F}\u{200D}\u{2640}\u{FE0F}" ]
 
-        , div [ class "btn-group mb-3" ]
-          [ viewButton "btn btn-sm btn-secondary mr-1" (SwitchTab Character) "\u{1F937}\u{200D}\u{2640}\u{FE0F} Suspects"
-          , viewButton "btn btn-sm btn-secondary mr-1" (SwitchTab Weapon) "\u{1F5E1}\u{FE0F} Weapons"
-          , viewButton "btn btn-sm btn-secondary" (SwitchTab Room) "\u{1F6AA} Rooms"
-          ]
-        , viewItemCategory model.selectedItemCategory model.items
-        , div [ class "form-group" ]
-          [ viewButton "btn btn-danger mt-4 mb-4" ClearAllNotes "\u{1F5D1}\u{FE0F} Clear All Notes"
+          , div [ class "btn-group mb-3" ]
+            [ viewButton "btn btn-sm btn-secondary mr-1" (SwitchTab Character) "\u{1F937}\u{200D}\u{2640}\u{FE0F} Suspects"
+            , viewButton "btn btn-sm btn-secondary mr-1" (SwitchTab Weapon) "\u{1F5E1}\u{FE0F} Weapons"
+            , viewButton "btn btn-sm btn-secondary" (SwitchTab Room) "\u{1F6AA} Rooms"
+            ]
+          , viewItemCategory model.selectedItemCategory (model.items ++ (List.repeat invisibleItemCount (Item model.selectedItemCategory None "" "")))
+          , div [ class "form-group" ]
+            [ viewButton "btn btn-danger mt-4 mb-4" ClearAllNotes "\u{1F5D1}\u{FE0F} Clear All Notes"
+            ]
           ]
         ]
       ]
-    ]
 
 
-getNoteHtmlInputId : Item -> String
-getNoteHtmlInputId item =
-  (String.toLower (gameObjectIdToString item.gameObjectId)) ++ "note"
+viewItem : Int -> Item -> Html Msg
+viewItem i item =
+  let
+    getHtmlId =
+      (String.toLower (gameObjectIdToString item.gameObjectId)) ++ "note" ++ String.fromInt i
+    baseOuterDivClass = "row mb-1"
+    outerDivClass = 
+      case item.gameObjectId of
+         None -> baseOuterDivClass ++ " invisible"
+         _ -> baseOuterDivClass
 
+  in       
+    div [ class outerDivClass ] 
+      [ label [ for getHtmlId, class "col-5 col-sm-3 col-lg-2 col-form-label handwriting" ] [ text item.name ] 
+      , div [ class "col-7 col-sm-9 col-lg-10" ] [ input [ id getHtmlId, type_ "text", class "form-control bg-transparent handwriting", value item.note, onInput UpdateItemNote, onFocus (ItemNoteSelected item.gameObjectId) ] [] ]
+      ]
 
-viewItem : Item -> Html Msg
-viewItem item =
-  div [ class "row mb-1" ] 
-    [ label [ for (getNoteHtmlInputId item), class "col-5 col-sm-3 col-lg-2 col-form-label handwriting" ] [ text item.name ] 
-    , div [ class "col-7 col-sm-9 col-lg-10" ] [ input [ id (getNoteHtmlInputId item), type_ "text", class "form-control bg-transparent handwriting", value item.note, onInput UpdateItemNote, onFocus (ItemNoteSelected item.gameObjectId) ] [] ]
-    ]
 
 viewItems : List Item -> Html Msg
 viewItems items =
-  div [] (List.map viewItem items)
+  div [] (List.indexedMap viewItem items)
 
 
 viewButton : String -> Msg -> String -> Html Msg

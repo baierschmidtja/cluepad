@@ -285,19 +285,41 @@ view model =
         [ form []
           [ h4 [] [ text "Cluepad \u{1F575}\u{FE0F}\u{200D}\u{2640}\u{FE0F}" ]
 
-          , div [ class "btn-group mb-3" ]
-            [ viewButton "btn btn-sm btn-secondary mr-1" (SwitchTab Character) "\u{1F937}\u{200D}\u{2640}\u{FE0F} Suspects"
-            , viewButton "btn btn-sm btn-secondary mr-1" (SwitchTab Weapon) "\u{1F5E1}\u{FE0F} Weapons"
-            , viewButton "btn btn-sm btn-secondary" (SwitchTab Room) "\u{1F6AA} Rooms"
-            ]
+          , viewTabButtons model.selectedItemCategory
           , viewItemCategory model.selectedItemCategory (model.items ++ (List.repeat invisibleItemCount (Item model.selectedItemCategory None "" "")))
           , div [ class "form-group" ]
-            [ viewButton "btn btn-danger mt-4 mb-4" ClearAllNotes "\u{1F5D1}\u{FE0F} Clear All Notes"
+            [ viewButton "btn btn-sm btn-danger mt-4 mb-4" ClearAllNotes "\u{1F5D1}\u{FE0F} Clear All Notes"
             ]
           ]
         ]
       ]
 
+viewTabButton : ItemCategory -> ItemCategory -> Html Msg
+viewTabButton itemCategory selectedItemCategory =
+  let
+    baseButtonClass = "btn btn-sm"
+    
+    buttonClass = 
+      case (itemCategory == selectedItemCategory) of
+         True -> baseButtonClass ++ " btn-dark"
+         False -> baseButtonClass ++ " btn-secondary"
+
+    buttonLabel = 
+      case itemCategory of
+         Character -> "\u{1F937}\u{200D}\u{2640}\u{FE0F} Suspects"
+         Weapon -> "\u{1F5E1}\u{FE0F} Weapons"
+         Room -> "\u{1F6AA} Rooms"
+  
+  in
+    viewButton buttonClass (SwitchTab itemCategory) buttonLabel
+
+viewTabButtons : ItemCategory -> Html Msg
+viewTabButtons selectedItemCategory =
+  div [ class "btn-group mb-3" ]
+    [ viewTabButton Character selectedItemCategory
+    , viewTabButton Weapon selectedItemCategory
+    , viewTabButton Room selectedItemCategory
+    ]
 
 viewItem : Int -> Item -> Html Msg
 viewItem i item =

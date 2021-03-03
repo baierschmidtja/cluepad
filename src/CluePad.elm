@@ -2,9 +2,9 @@
 port module Cluepad exposing (..)
 
 import Browser
-import Html exposing (Attribute, Html, button, div, form, input, label, text, br, h4, h5)
-import Html.Attributes exposing (type_, class, id, for, value)
-import Html.Events exposing (keyCode, on, onBlur, onClick, onFocus, onInput)
+import Html exposing (Html, a, ul, li, button, div, p, input, label, text)
+import Html.Attributes exposing (type_, class, href, id, for, target, value)
+import Html.Events exposing (onClick, onFocus, onInput)
 import Json.Encode as JsonE
 import Json.Decode as JsonD
 import String
@@ -143,6 +143,7 @@ type alias Model =
   { items: List Item
   , selectedItemGameObjectId: GameObjectId
   , selectedItemCategory: ItemCategory
+  , showingSettings: Bool
   }
 
 isItemInCategory : ItemCategory -> Item -> Bool
@@ -189,6 +190,7 @@ init flags =
       ]
       None
       Character
+      False
   in
     ( case JsonD.decodeValue serializableStateDecoder flags of
         Ok serializableState ->
@@ -210,6 +212,7 @@ type Msg
   | SaveAllNotes
   | ClearAllNotes
   | SwitchTab ItemCategory
+  | ToggleSettings
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -232,12 +235,17 @@ update msg model =
       )
 
     ClearAllNotes ->
-      ( { model | items = clearNotes model.items }
+      ( { model | items = clearNotes model.items, selectedItemCategory = Character, showingSettings = False }
       , Cmd.none
       )
 
     SwitchTab itemCategory ->
       ( { model | selectedItemCategory = itemCategory }
+      , Cmd.none
+      )
+
+    ToggleSettings ->
+      ( { model | showingSettings = not model.showingSettings }
       , Cmd.none
       )
 
@@ -271,52 +279,90 @@ clearNotes items =
 
 view : Model -> Html Msg
 view model =
-  let
-    -- for padding out the pages with less items to keep the notepad size consistent
-    invisibleItemCount = 
-      case model.selectedItemCategory of
-         Character -> 3
-         Weapon -> 3
-         Room -> 0
-  in
-    div [ class "container" ]
-      [ div [ class "top-decoration" ] []
-      , div [ class "main-content" ]
-        [ form []
-          [ h4 [] [ text "Cluepad \u{1F575}\u{FE0F}\u{200D}\u{2640}\u{FE0F}" ]
-
-          , viewTabButtons model.selectedItemCategory
-          , viewItemCategory model.selectedItemCategory (model.items ++ (List.repeat invisibleItemCount (Item model.selectedItemCategory None "" "")))
-          , div [ class "form-group" ]
-            [ viewButton "btn btn-sm btn-danger mt-4 mb-4" ClearAllNotes "\u{1F5D1}\u{FE0F} Clear All Notes"
+  if model.showingSettings then
+    viewSettings
+  else
+    let
+      -- for padding out the pages with less items to keep the notepad size consistent
+      invisibleItemCount = 
+        case model.selectedItemCategory of
+          Character -> 4
+          Weapon -> 4
+          Room -> 1
+    in
+      div [ class "container" ]
+        [ div [ class "top-decoration" ] []
+        , div [ class "main-content" ]
+          [ div []
+            [ viewTabButtons model.selectedItemCategory
+            , viewItemCategory model.selectedItemCategory (model.items ++ (List.repeat invisibleItemCount (Item model.selectedItemCategory None "" "")))
+            , div [] []
             ]
           ]
         ]
-      ]
+
+
+viewSettingsButton : Html Msg
+viewSettingsButton = 
+  viewButton "btn btn-lg" ToggleSettings "\u{2699}\u{FE0F}"
+
+
+viewSettings : Html Msg
+viewSettings =
+  div [ class "container" ]
+    [ div [ class "top-decoration" ] []
+    , div [ class "main-content" ]
+        [ div [ class "input-group" ]
+            [ div [ class "input-group-prepend" ]
+                [ viewSettingsButton
+                ]
+            , label [ class "form-control form-control-lg bg-transparent handwriting" ] [ text "Cluepad" ]
+            ]
+        , div [ class "handwriting"]
+            [ p [ class "handwriting" ] [ text "Save paper and keep track of notes on your favorite device while playing the classic Whodunnit game.  On a mobile device?  Be sure to Add to Home Screen for a full-screen experience." ]
+            , label [ class "handwriting" ] [ text "Thanks:" ]
+            , ul []
+                [ li [] [ a [ href "https://elm-lang.org/", target "_blank" ] [ text "elm programming language" ] ]
+                , li [] [ a [ href "https://fonts.google.com/specimen/Reenie+Beanie?preview.text_type=custom", target "_blank" ] [ text "Reenie Beanie font by James Grieshaber" ] ] 
+                , li [] [ a [ href "https://www.myfreetextures.com/wp-content/uploads/2014/10/texture-seamless-wood-4.jpg", target "_blank" ] [ text "Woodgrain texture" ] ]
+                ]
+            , p [ class "handwriting" ]
+                [ text "Source code can be found " 
+                , a [ href "https://github.com/baierschmidtja/cluepad/", target "_blank" ] [ text "here" ]
+                ]
+            , div [ class "form-group" ]
+                [ viewButton "btn btn-danger mt-4 mb-4" ClearAllNotes "\u{1F5D1}\u{FE0F} Erase All Notes!"
+                ]
+            ]
+        ]
+    ]
 
 viewTabButton : ItemCategory -> ItemCategory -> Html Msg
 viewTabButton itemCategory selectedItemCategory =
   let
-    baseButtonClass = "btn btn-sm"
+    baseButtonClass = "btn btn-lg tab"
     
     buttonClass = 
-      case (itemCategory == selectedItemCategory) of
-         True -> baseButtonClass ++ " btn-dark"
-         False -> baseButtonClass ++ " btn-secondary"
+      if (itemCategory == selectedItemCategory) then
+        baseButtonClass ++ " tab-active"
+      else
+        baseButtonClass ++ " tab-inactive"
 
     buttonLabel = 
       case itemCategory of
-         Character -> "\u{1F937}\u{200D}\u{2640}\u{FE0F} Suspects"
-         Weapon -> "\u{1F5E1}\u{FE0F} Weapons"
-         Room -> "\u{1F6AA} Rooms"
+         Character -> "\u{1F937}\u{200D}\u{2640}\u{FE0F}"
+         Weapon -> "\u{1F5E1}\u{FE0F}"
+         Room -> "\u{1F6AA}"
   
   in
     viewButton buttonClass (SwitchTab itemCategory) buttonLabel
 
+
 viewTabButtons : ItemCategory -> Html Msg
 viewTabButtons selectedItemCategory =
-  div [ class "btn-group mb-3" ]
-    [ viewTabButton Character selectedItemCategory
+  div [ class "btn-group mb-1" ]
+    [ viewSettingsButton
+    , viewTabButton Character selectedItemCategory
     , viewTabButton Weapon selectedItemCategory
     , viewTabButton Room selectedItemCategory
     ]
@@ -334,8 +380,8 @@ viewItem i item =
 
   in       
     div [ class outerDivClass ] 
-      [ label [ for getHtmlId, class "col-6 col-sm-3 col-lg-2 col-form-label handwriting" ] [ text item.name ] 
-      , div [ class "col-6 col-sm-9 col-lg-10" ] [ input [ id getHtmlId, type_ "text", class "form-control bg-transparent handwriting", value item.note, onInput UpdateItemNote, onFocus (ItemNoteSelected item.gameObjectId) ] [] ]
+      [ label [ for getHtmlId, class "col-6 col-sm-3 col-lg-2 col-form-label bg-transparent handwriting handwriting-xl" ] [ text item.name ] 
+      , div [ class "col-6 col-sm-9 col-lg-10" ] [ input [ id getHtmlId, type_ "text", class "form-control bg-transparent handwriting handwriting-xl", value item.note, onInput UpdateItemNote, onFocus (ItemNoteSelected item.gameObjectId) ] [] ]
       ]
 
 

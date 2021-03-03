@@ -21,6 +21,10 @@ body {
 .handwriting {
     font-family: 'Reenie Beanie', cursive;
     font-weight: bold;
+    border: 0px none;
+}
+
+.handwriting-xl {
     font-size: x-large;
 }
 
@@ -31,13 +35,25 @@ body {
     background-repeat: repeat;
 }
 
-.bg-transparent {
-    background-color:rgba(0, 0, 0, 0);
-    border: 0px none;
-}
 
 .invisible {
     visibility: hidden;
+}
+
+.tab {
+    border-color: black
+}
+
+.tab-inactive {
+    color: #ffffff54;
+}
+
+.tab-inactive:hover {
+    color: white;
+}
+
+.tab-active {
+    background-color: transparent;
 }
 
 @media only screen and (max-width: 576px) {

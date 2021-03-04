@@ -1,4 +1,4 @@
-# Cluepad
+# Cluepad ([Try it now!](https://cluepad.baierschmidtja.com))
 Basic online notepad for the classic Whodunnit game.  Save paper and use your favorite device to keep track of your progress.  Add to Home Screen to enable full screen functionality and offline access.
 
 ## build (requires elm)

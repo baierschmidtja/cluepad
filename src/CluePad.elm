@@ -323,11 +323,11 @@ viewSettings =
             , label [ class "handwriting" ] [ text "Thanks:" ]
             , ul []
                 [ li [] [ a [ href "https://elm-lang.org/", target "_blank" ] [ text "elm programming language" ] ]
-                , li [] [ a [ href "https://fonts.google.com/specimen/Reenie+Beanie?preview.text_type=custom", target "_blank" ] [ text "Reenie Beanie font by James Grieshaber" ] ] 
+                , li [] [ a [ href "https://fonts.google.com/specimen/Reenie+Beanie?preview.text_type=custom", target "_blank" ] [ text "Reenie Beanie Google font by James Grieshaber" ] ] 
                 , li [] [ a [ href "https://www.myfreetextures.com/wp-content/uploads/2014/10/texture-seamless-wood-4.jpg", target "_blank" ] [ text "Woodgrain texture" ] ]
                 ]
             , p [ class "handwriting" ]
-                [ text "Source code can be found " 
+                [ text "Source code can be found on GitHub " 
                 , a [ href "https://github.com/baierschmidtja/cluepad/", target "_blank" ] [ text "here" ]
                 ]
             , div [ class "form-group" ]

@@ -294,7 +294,10 @@ view model =
         [ div [ class "top-decoration" ] []
         , div [ class "main-content" ]
           [ div []
-            [ viewTabButtons model.selectedItemCategory
+            [ div [ class "btn-toolbar" ]
+              [ viewSettingsButton
+              , viewTabButtons model.selectedItemCategory
+              ]
             , viewItemCategory model.selectedItemCategory (model.items ++ (List.repeat invisibleItemCount (Item model.selectedItemCategory None "" "")))
             , div [] []
             ]
@@ -304,7 +307,8 @@ view model =
 
 viewSettingsButton : Html Msg
 viewSettingsButton = 
-  viewButton "btn btn-lg" ToggleSettings "\u{2699}\u{FE0F}"
+  div [ class "btn-group mb-1 mr-1" ] [ viewButton "btn btn-lg" ToggleSettings "\u{2699}\u{FE0F}" ]
+  
 
 
 viewSettings : Html Msg
@@ -361,8 +365,7 @@ viewTabButton itemCategory selectedItemCategory =
 viewTabButtons : ItemCategory -> Html Msg
 viewTabButtons selectedItemCategory =
   div [ class "btn-group mb-1" ]
-    [ viewSettingsButton
-    , viewTabButton Character selectedItemCategory
+    [ viewTabButton Character selectedItemCategory
     , viewTabButton Weapon selectedItemCategory
     , viewTabButton Room selectedItemCategory
     ]

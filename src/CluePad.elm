@@ -319,7 +319,7 @@ viewSettings =
             , label [ class "form-control form-control-lg bg-transparent handwriting" ] [ text "Cluepad" ]
             ]
         , div [ class "handwriting"]
-            [ p [ class "handwriting" ] [ text "Save paper and keep track of notes on your favorite device while playing the classic Whodunnit game.  On a mobile device?  Be sure to Add to Home Screen for a full-screen experience." ]
+            [ p [ class "handwriting" ] [ text "Save paper and keep track of notes on your favorite device while playing the classic Whodunnit game.  On a mobile device?  Be sure to Add to Home Screen to allow for a full-screen experience that works offline." ]
             , label [ class "handwriting" ] [ text "Thanks:" ]
             , ul []
                 [ li [] [ a [ href "https://elm-lang.org/", target "_blank" ] [ text "elm programming language" ] ]

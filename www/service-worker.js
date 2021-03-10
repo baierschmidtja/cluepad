@@ -1,4 +1,4 @@
-const CACHE = "cluepad-cache";
+const CACHE = "cluepad-cache2";
 const PREVIOUS_CACHE = "cluepad-cache";
 
 self.addEventListener("message", (event) => {

@@ -3,8 +3,8 @@ port module Cluepad exposing (..)
 
 import Browser
 import Html exposing (Html, a, ul, li, button, div, p, input, label, text)
-import Html.Attributes exposing (type_, class, href, id, for, target, value)
-import Html.Events exposing (onClick, onFocus, onInput)
+import Html.Attributes exposing (type_, class, href, id, for, checked, target, value)
+import Html.Events exposing (onCheck, onClick, onFocus, onInput)
 import Json.Encode as JsonE
 import Json.Decode as JsonD
 import String
@@ -144,6 +144,7 @@ type alias Model =
   , selectedItemGameObjectId: GameObjectId
   , selectedItemCategory: ItemCategory
   , showingSettings: Bool
+  , useCheckBoxes: Bool
   }
 
 isItemInCategory : ItemCategory -> Item -> Bool
@@ -191,11 +192,14 @@ init flags =
       None
       Character
       False
+      True
   in
     ( case JsonD.decodeValue serializableStateDecoder flags of
         Ok serializableState ->
           { model | items = mapSerializableNotesToItems serializableState.serializableNotes model.items
           , selectedItemCategory =  serializableState.selectedItemCategory
+          , showingSettings = serializableState.showingSettings
+          , useCheckBoxes = serializableState.useCheckBoxes
           }
         Err _ -> model
     , Cmd.none
@@ -213,6 +217,7 @@ type Msg
   | ClearAllNotes
   | SwitchTab ItemCategory
   | ToggleSettings
+  | CheckUseCheckBoxes Bool
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -220,7 +225,10 @@ update msg model =
   case msg of
     
     ItemNoteSelected gameObjectId ->
-      ( { model | selectedItemGameObjectId = gameObjectId }
+      ( if model.useCheckBoxes then
+          { model | selectedItemGameObjectId = gameObjectId, items = updateItems model.items gameObjectId (getNewCheckBoxValue model.items gameObjectId) }
+        else
+          { model | selectedItemGameObjectId = gameObjectId }
       , Cmd.none  
       )
 
@@ -249,6 +257,28 @@ update msg model =
       , Cmd.none
       )
 
+    CheckUseCheckBoxes useCheckBoxes ->
+      ( { model | useCheckBoxes = useCheckBoxes }
+      , Cmd.none
+      )
+
+
+getNewCheckBoxValue : List Item -> GameObjectId -> String
+getNewCheckBoxValue items gameObjectId =
+  let
+    itemHasGameObjectId item = 
+      item.gameObjectId == gameObjectId
+
+    maybeItem = List.head (List.filter itemHasGameObjectId items)
+  in 
+    case maybeItem of
+       Maybe.Nothing -> ""
+       Maybe.Just item ->
+        if String.trim item.note == "" then
+          "X"
+        else
+          ""
+  
 
 updateItems : List Item -> GameObjectId -> String -> List Item
 updateItems items gameObjectId note =
@@ -280,29 +310,21 @@ clearNotes items =
 view : Model -> Html Msg
 view model =
   if model.showingSettings then
-    viewSettings
+    viewSettings model.useCheckBoxes
   else
-    let
-      -- for padding out the pages with less items to keep the notepad size consistent
-      invisibleItemCount = 
-        case model.selectedItemCategory of
-          Character -> 4
-          Weapon -> 4
-          Room -> 1
-    in
-      div [ class "container" ]
-        [ div [ class "top-decoration" ] []
-        , div [ class "main-content" ]
-          [ div []
-            [ div [ class "btn-toolbar" ]
-              [ viewSettingsButton
-              , viewTabButtons model.selectedItemCategory
-              ]
-            , viewItemCategory model.selectedItemCategory (model.items ++ (List.repeat invisibleItemCount (Item model.selectedItemCategory None "" "")))
-            , div [] []
+    div [ class "container" ]
+      [ div [ class "top-decoration" ] []
+      , div [ class "main-content" ]
+        [ div []
+          [ div [ class "btn-toolbar" ]
+            [ viewSettingsButton
+            , viewTabButtons model.selectedItemCategory
             ]
+          , viewItemCategory model.selectedItemCategory model.items model.useCheckBoxes
+          , div [] []
           ]
         ]
+      ]
 
 
 viewSettingsButton : Html Msg
@@ -311,8 +333,8 @@ viewSettingsButton =
   
 
 
-viewSettings : Html Msg
-viewSettings =
+viewSettings : Bool -> Html Msg
+viewSettings useCheckBoxes =
   div [ class "container" ]
     [ div [ class "top-decoration" ] []
     , div [ class "main-content" ]
@@ -323,16 +345,21 @@ viewSettings =
             , label [ class "form-control form-control-lg bg-transparent handwriting" ] [ text "Cluepad" ]
             ]
         , div [ class "handwriting"]
-            [ p [ class "handwriting" ] [ text "Save paper and keep track of notes on your favorite device while playing the classic Whodunnit game.  On a mobile device?  Be sure to Add to Home Screen to allow for a full-screen experience that works offline." ]
-            , label [ class "handwriting" ] [ text "Thanks:" ]
+            [ p [] [ text "Save paper and keep track of notes on your favorite device while playing the classic Whodunnit game.  On a mobile device?  Be sure to Add to Home Screen to allow for a full-screen experience that works offline." ]
+            , label [] [ text "Thanks:" ]
             , ul []
                 [ li [] [ a [ href "https://elm-lang.org/", target "_blank" ] [ text "elm programming language" ] ]
                 , li [] [ a [ href "https://fonts.google.com/specimen/Reenie+Beanie?preview.text_type=custom", target "_blank" ] [ text "Reenie Beanie Google font by James Grieshaber" ] ] 
                 , li [] [ a [ href "https://www.myfreetextures.com/wp-content/uploads/2014/10/texture-seamless-wood-4.jpg", target "_blank" ] [ text "Woodgrain texture" ] ]
                 ]
-            , p [ class "handwriting" ]
+            , p []
                 [ text "Source code can be found on GitHub " 
                 , a [ href "https://github.com/baierschmidtja/cluepad/", target "_blank" ] [ text "here" ]
+                ]
+            , text "======================================"
+            , div [ class "form-group form-check" ]
+                [ input [ id "useCheckBoxes", class "form-check-input", type_ "checkbox", checked useCheckBoxes, onCheck CheckUseCheckBoxes ] []
+                , label [ class "form-check-label", for "useCheckBoxes" ] [ text "Uncheck to use text notes instead of X marks" ]
                 ]
             , div [ class "form-group" ]
                 [ viewButton "btn btn-danger mt-4 mb-4" ClearAllNotes "\u{1F5D1}\u{FE0F} Erase All Notes!"
@@ -370,27 +397,34 @@ viewTabButtons selectedItemCategory =
     , viewTabButton Room selectedItemCategory
     ]
 
-viewItem : Int -> Item -> Html Msg
-viewItem i item =
+
+viewItem : Bool -> Int -> Item -> Html Msg
+viewItem useCheckBox i item =
   let
     getHtmlId =
       (String.toLower (gameObjectIdToString item.gameObjectId)) ++ "note" ++ String.fromInt i
-    baseOuterDivClass = "row mb-1"
+    baseOuterDivClass = "row"
     outerDivClass = 
       case item.gameObjectId of
          None -> baseOuterDivClass ++ " invisible"
          _ -> baseOuterDivClass
-
+    noteElementColClass = "col-6 col-sm-9 col-lg-10"
+    noteElementClass = "bg-transparent handwriting handwriting-xl"
+    noteElement = 
+      if useCheckBox then
+        label [ id getHtmlId, class (noteElementColClass ++ " col-form-label " ++ noteElementClass) ] [ text item.note ]
+      else    
+        div [ class noteElementColClass ] [ input [ id getHtmlId, type_ "text", class ("form-control " ++ noteElementClass), value item.note, onInput UpdateItemNote, onFocus (ItemNoteSelected item.gameObjectId) ] [] ]
   in       
-    div [ class outerDivClass ] 
+    div [ class outerDivClass, onClick (ItemNoteSelected item.gameObjectId) ] 
       [ label [ for getHtmlId, class "col-6 col-sm-3 col-lg-2 col-form-label bg-transparent handwriting handwriting-xl" ] [ text item.name ] 
-      , div [ class "col-6 col-sm-9 col-lg-10" ] [ input [ id getHtmlId, type_ "text", class "form-control bg-transparent handwriting handwriting-xl", value item.note, onInput UpdateItemNote, onFocus (ItemNoteSelected item.gameObjectId) ] [] ]
+      , noteElement
       ]
 
 
-viewItems : List Item -> Html Msg
-viewItems items =
-  div [] (List.indexedMap viewItem items)
+viewItems : List Item -> Bool -> Html Msg
+viewItems items useCheckBoxes =
+  div [] (List.indexedMap (viewItem useCheckBoxes) items)
 
 
 viewButton : String -> Msg -> String -> Html Msg
@@ -398,9 +432,9 @@ viewButton cls toMsg txt =
   button [ type_ "button", class cls, onClick toMsg ] [ text txt ]
 
 
-viewItemCategory : ItemCategory -> List Item -> Html Msg
-viewItemCategory itemCategory items =
-  viewItems (getItemsForCategory itemCategory items)
+viewItemCategory : ItemCategory -> List Item -> Bool -> Html Msg
+viewItemCategory itemCategory items useCheckBoxes =
+  viewItems (getItemsForCategory itemCategory items) useCheckBoxes
 
 
 
@@ -435,6 +469,8 @@ type alias SerializableNote =
 type alias SerializableState =
  { serializableNotes: List SerializableNote
  , selectedItemCategory: ItemCategory
+ , showingSettings: Bool
+ , useCheckBoxes: Bool
  }
 
 
@@ -472,7 +508,7 @@ mapSerializableNotesToItems serializableNotes items  =
 
 modelToSerializableState : Model -> SerializableState
 modelToSerializableState model =
-  SerializableState (itemsToSerializableNotes model.items) model.selectedItemCategory
+  SerializableState (itemsToSerializableNotes model.items) model.selectedItemCategory model.showingSettings model.useCheckBoxes
 
 -- JSON DECODERS
 
@@ -584,9 +620,11 @@ serializableNotesDecoder =
 
 serializableStateDecoder : JsonD.Decoder SerializableState
 serializableStateDecoder =
-  JsonD.map2 SerializableState
+  JsonD.map4 SerializableState
     (JsonD.field "serializableNotes" serializableNotesDecoder)
     (JsonD.field "selectedItemCategory" itemCategoryDecoder)
+    (JsonD.field "showingSettings" JsonD.bool)
+    (JsonD.field "useCheckBoxes" JsonD.bool)
 
   
 
@@ -609,4 +647,6 @@ encodeSerializableState serializableState =
   JsonE.object
     [ ("serializableNotes", encodeSerializableNotes serializableState.serializableNotes)
     , ("selectedItemCategory", JsonE.string (itemCategoryToString serializableState.selectedItemCategory))
+    , ("showingSettings", JsonE.bool serializableState.showingSettings)
+    , ("useCheckBoxes", JsonE.bool serializableState.useCheckBoxes)
     ]

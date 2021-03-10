@@ -33,6 +33,7 @@ body {
     padding-right: 1rem;
     background-image: url('images/yellow-notepad-long.jpg');
     background-repeat: repeat;
+    min-height: 520px;
 }
 
 

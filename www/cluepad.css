@@ -42,11 +42,11 @@ body {
 }
 
 .tab {
-    border-color: black
+    border-color: black;
 }
 
 .tab-inactive {
-    color: #ffffff54;
+    opacity: 0.4;
 }
 
 .tab-inactive:hover {
@@ -54,7 +54,7 @@ body {
 }
 
 .tab-active {
-    background-color: transparent;
+    background-color: rgba(133, 255, 102, 0.616);
 }
 
 @media only screen and (max-width: 576px) {

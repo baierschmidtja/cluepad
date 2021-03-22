@@ -1,5 +1,5 @@
-const CACHE = "cluepad-cache3";
-const PREVIOUS_CACHE = "cluepad-cache2";
+const CACHE = "cluepad-cache4";
+const PREVIOUS_CACHE = "cluepad-cache3";
 
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
